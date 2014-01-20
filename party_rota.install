@@ -1,0 +1,146 @@
+<?php
+
+/**
+ * @file
+ * Sets up the base table for our entity and a table to store information about
+ * the entity types.
+ */
+
+
+/**
+ * Implements hook_schema().
+ */
+function party_rota_schema() {
+  $schema = array();
+
+  $schema['party_rota'] = array(
+    'description' => 'The base table for rota entities.',
+    'fields' => array(
+      'rota_id' => array(
+        'description' => 'Primary Key: Identifier for a rota.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'language' => array(
+        'description' => 'The language of the rota.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'name' => array(
+        'description' => 'The name of the rota - a human-readable identifier.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the rota was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changed' => array(
+        'description' => 'The Unix timestamp when the rota was most recently saved.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('rota_id'),
+  );
+
+  $schema['party_rota_slot'] = array(
+    'description' => 'The base table for rota entities.',
+    'fields' => array(
+      'slot_id' => array(
+        'description' => 'Primary Key: Identifier for a slot.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'rota_id' => array(
+        'description' => 'The unique identifier of the rota this slot is attached to.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'language' => array(
+        'description' => 'The language of the slot.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'name' => array(
+        'description' => 'The name of the slot - a human-readable identifier.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the slot was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changed' => array(
+        'description' => 'The Unix timestamp when the slot was most recently saved.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('slot_id'),
+  );
+
+  $schema['party_rota_position'] = array(
+    'description' => 'The base table for rota entities.',
+    'fields' => array(
+      'position_id' => array(
+        'description' => 'Primary Key: Identifier for a position.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'rota_id' => array(
+        'description' => 'The unique identifier of the rota this position is attached to.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'language' => array(
+        'description' => 'The language of the position.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'name' => array(
+        'description' => 'The name of the position - a human-readable identifier.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the position was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changed' => array(
+        'description' => 'The Unix timestamp when the position was most recently saved.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('position_id'),
+  );
+
+  return $schema;
+}

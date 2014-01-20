@@ -1,0 +1,21 @@
+name = Open CRM Rota
+description = Provides rota functionality
+core = 7.x
+
+dependencies[] = entity
+;dependencies[] = views
+
+files[] = rota.entity.inc
+files[] = rota_slot.entity.inc
+files[] = rota_position.entity.inc
+;files[] = rota_type.entity.inc
+files[] = party_rota.admin.inc
+;files[] = party_rota_type.admin.inc
+
+
+;files[] = views/model.views.inc
+;files[] = views/model_handler_link_field.inc
+;files[] = views/model_handler_delete_link_field.inc
+;files[] = views/model_handler_edit_link_field.inc
+;files[] = views/model_handler_model_operations_field.inc
+
