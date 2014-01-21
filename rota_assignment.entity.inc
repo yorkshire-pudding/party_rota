@@ -7,10 +7,10 @@
 /**
  * The class used for model entities
  */
-class Slot extends Entity {
+class Assignment extends Entity {
   
   public function __construct($values = array()) {
-    parent::__construct($values, 'rota_slot');
+    parent::__construct($values, 'rota_assignment');
   }
 
   protected function defaultLabel() {
@@ -18,7 +18,7 @@ class Slot extends Entity {
   }
 
   protected function defaultUri() {
-    return array('path' => 'rota_slot/' . $this->slot_id);
+    return array('path' => 'assignment/' . $this->assignment_id);
   } 
 
 }
@@ -26,7 +26,7 @@ class Slot extends Entity {
 /**
  * The Controller for Model entities
  */
-class SlotController extends EntityAPIController {
+class AssignmentController extends EntityAPIController {
 
   public function __construct($entityType) {
     parent::__construct($entityType);
@@ -47,18 +47,19 @@ class SlotController extends EntityAPIController {
   public function create(array $values = array()) {
     // Add values that are specific to our Model
     $values += array( 
-      'slot_id' => '',
-      'rota_id' => '',
+      'assignment_id' => '',
+      'rota_id' => 0,
+      'party_id' => 0,
+      'position_id' => 0,
+      'slot_id' => 0,
       'is_new' => TRUE,
       'name' => '',
-      'description' => '',
       'created' => time(),
       'changed' => time(),
-      'date' => '',
     );
     
-    $slot = parent::create($values);
-    return $slot;
+    $assignment = parent::create($values);
+    return $assignment;
   }
 
   public function save($entity, DatabaseTransaction $transaction = NULL) {

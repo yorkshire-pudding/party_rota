@@ -3,11 +3,13 @@ description = Provides rota functionality
 core = 7.x
 
 dependencies[] = entity
+dependencies[] = ctools
 ;dependencies[] = views
 
 files[] = rota.entity.inc
 files[] = rota_slot.entity.inc
 files[] = rota_position.entity.inc
+files[] = rota_assignment.entity.inc
 ;files[] = rota_type.entity.inc
 files[] = party_rota.admin.inc
 ;files[] = party_rota_type.admin.inc

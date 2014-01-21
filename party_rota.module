@@ -50,9 +50,9 @@ function party_rota_entity_info() {
       'path' => 'admin/content/rotas',
       'file' => 'party_rota.admin.inc',
       'controller class' => 'RotaUIController',
-      'menu wildcard' => '%party_rota',
+      'menu wildcard' => '%rota',
     ),
-    'load hook' => 'party_rota_load',
+    //'load hook' => 'party_rota_load',
   );
 
   $info['rota_slot'] = array(
@@ -78,7 +78,7 @@ function party_rota_entity_info() {
     'access callback' => 'party_rota_slot_access',
     'module' => 'party_rota',
     // The information below is used by the ModelUIController (which extends the EntityDefaultUIController)
-    'load hook' => 'party_rota_slot_load',
+    //'load hook' => 'party_rota_slot_load',
   );
 
   $info['rota_position'] = array(
@@ -104,10 +104,61 @@ function party_rota_entity_info() {
     'access callback' => 'party_rota_position_access',
     'module' => 'party_rota',
     // The information below is used by the ModelUIController (which extends the EntityDefaultUIController)
-    'load hook' => 'party_rota_position_load',
+    //'load hook' => 'party_rota_position_load',
+  );
+
+  $info['rota_assignment'] = array(
+    'label' => t('Assignment'),
+    // The entity class and controller class extend the classes provided by the
+    // Entity API
+    'entity class' => 'Assignment',
+    'controller class' => 'AssignmentController',
+    'base table' => 'party_rota_assignment',
+    'fieldable' => TRUE,
+    'entity keys' => array(
+        'id' => 'assignment_id',
+    ),
+    // Bundles are defined by the model types below
+    'bundles' => array(
+      'assignment' => array(
+        'label' => t('Assignment'),
+      ),
+    ),
+    'label callback' => 'entity_class_label',
+    'uri callback' => 'entity_class_uri',
+    'creation callback' => 'party_rota_assignment_create',
+    'access callback' => 'party_rota_assignment_access',
+    'module' => 'party_rota',
+    // The information below is used by the ModelUIController (which extends the EntityDefaultUIController)
+    //'load hook' => 'party_rota_assignment_load',
   );
 
   return $info;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function party_rota_menu() {
+  $items['admin/party_rota/%ctools_js/add/%rota_position/%rota_slot'] = array(
+    'title' => 'Add Assignment',
+    'page callback' => 'party_rota_inline_ajax_add',
+    'page arguments' => array(2,4,5),
+    'access callback' => TRUE,
+    'file' => 'party_rota.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/party_rota/%ctools_js/delete/%rota_assignment'] = array(
+    'title' => 'Delete Assignment',
+    'page callback' => 'party_rota_inline_ajax_delete',
+    'page arguments' => array(2,4),
+    'access callback' => TRUE,
+    'file' => 'party_rota.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
 }
 
 /**
@@ -132,6 +183,10 @@ function party_rota_permission() {
     'administer positions' => array(
       'title' => t('Administer positions'),
       'description' => t('Edit and delete all positions'),
+    ),
+    'administer assignments' => array(
+      'title' => t('Administer assignments'),
+      'description' => t('Edit and delete all assignments'),
     ),
   );
   
@@ -177,6 +232,14 @@ function party_rota_position_access($op, $rota = NULL, $account = NULL) {
   return FALSE;
 }
 
+function party_rota_assignment_access($op, $rota = NULL, $account = NULL) {
+  if (user_access('administer assignments', $account)) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 /**
  * Fetch a model object. Make sure that the wildcard you choose 
  * in the model entity definition fits the function name here.
@@ -190,19 +253,24 @@ function party_rota_position_access($op, $rota = NULL, $account = NULL) {
  *
  * @see model_load_multiple()
  */
-function party_rota_load($rota_id, $reset = FALSE) {
-  $rotas = party_rota_load_multiple(array($rota_id), array(), $reset);
+function rota_load($rota_id, $reset = FALSE) {
+  $rotas = rota_load_multiple(array($rota_id), array(), $reset);
   return reset($rotas);
 }
 
-function party_rota_slot_load($slot_id, $reset = FALSE) {
-  $slots = party_rota_slot_load_multiple(array($slot_id), array(), $reset);
+function rota_slot_load($slot_id, $reset = FALSE) {
+  $slots = rota_slot_load_multiple(array($slot_id), array(), $reset);
   return reset($slots);
 }
 
-function party_rota_position_load($position_id, $reset = FALSE) {
-  $positions = party_rota_position_load_multiple(array($position_id), array(), $reset);
+function rota_position_load($position_id, $reset = FALSE) {
+  $positions = rota_position_load_multiple(array($position_id), array(), $reset);
   return reset($positions);
+}
+
+function rota_assignment_load($assignment_id, $reset = FALSE) {
+  $assignments = rota_assignment_load_multiple(array($assignment_id), array(), $reset);
+  return reset($assignments);
 }
 
 /**
@@ -220,16 +288,20 @@ function party_rota_position_load($position_id, $reset = FALSE) {
  * @see entity_load()
  * @see model_load()
  */
-function party_rota_load_multiple($rota_ids = array(), $conditions = array(), $reset = FALSE) {
+function rota_load_multiple($rota_ids = array(), $conditions = array(), $reset = FALSE) {
   return entity_load('rota', $rota_ids, $conditions, $reset);
 }
 
-function party_rota_slot_load_multiple($slot_ids = array(), $conditions = array(), $reset = FALSE) {
+function rota_slot_load_multiple($slot_ids = array(), $conditions = array(), $reset = FALSE) {
   return entity_load('rota_slot', $slot_ids, $conditions, $reset);
 }
 
-function party_rota_position_load_multiple($position_ids = array(), $conditions = array(), $reset = FALSE) {
+function rota_position_load_multiple($position_ids = array(), $conditions = array(), $reset = FALSE) {
   return entity_load('rota_position', $position_ids, $conditions, $reset);
+}
+
+function rota_assignment_load_multiple($assignment_ids = array(), $conditions = array(), $reset = FALSE) {
+  return entity_load('rota_assignment', $assignment_ids, $conditions, $reset);
 }
 
 /**
@@ -277,6 +349,17 @@ function party_rota_slot_create($values = array()) {
 function party_rota_position_create($values = array()) {
   return entity_get_controller('rota_position')->create($values);
 }
+
+/**
+ * Create a rota_assignment object.
+ *
+ * @param array $values
+ *   A list of values used to create the rota_assignment object.
+ */
+function party_rota_assignment_create($values = array()) {
+  return entity_get_controller('rota_assignment')->create($values);
+}
+
 
 /**
  * Saves a model to the database.
@@ -496,6 +579,7 @@ function party_rota_get_slots_from_rota(Rota $rota) {
   $result = db_select('party_rota_slot', 's')
     ->fields('s')
     ->condition('rota_id', $rota->rota_id, '=')
+    ->orderBy('date', 'ASC')//ORDER BY created
     ->execute()
     ->fetchAll();
 
@@ -503,7 +587,7 @@ function party_rota_get_slots_from_rota(Rota $rota) {
     $slots = array();
 
       foreach ($result as $data) {
-        $slots[$data->slot_id] = party_rota_slot_load($data->slot_id);
+        $slots[$data->slot_id] = rota_slot_load($data->slot_id);
       }
 
     return $slots;
@@ -520,15 +604,117 @@ function party_rota_get_positions_from_rota(Rota $rota) {
     ->fetchAll();
 
   if (isset($result)) {
-    //dpm($result);
     $positions = array();
 
     foreach ($result as $data) {
-      $positions[$data->position_id] = party_rota_position_load($data->position_id);
+      $positions[$data->position_id] = rota_position_load($data->position_id);
     }
 
     return $positions;
   }
 
   return FALSE;
+}
+
+function party_rota_get_assignments_from_rota(Rota $rota) {
+  $result = db_select('party_rota_assignment', 'a')
+    ->fields('a')
+    ->condition('rota_id', $rota->rota_id, '=')
+    ->execute()
+    ->fetchAll();
+
+  if (isset($result)) {
+    $assignments = array();
+
+    foreach ($result as $data) {
+      $assignments[$data->assignment_id] = rota_assignment_load($data->assignment_id);
+    }
+
+    return $assignments;
+  }
+
+  return FALSE;
+}
+
+function party_rota_get_parties_from_rota(Rota $rota) {
+  $result = db_select('field_data_party_rota_parties', 'p')
+    ->fields('p')
+    ->condition('entity_type', 'rota', '=')
+    ->condition('entity_id', $rota->rota_id, '=')
+    ->execute()
+    ->fetchAll();
+
+  if (isset($result)) {
+    $parties = array();
+
+    foreach ($result as $data) {
+      $parties[$data->party_rota_parties_target_id] = party_load($data->party_rota_parties_target_id);
+    }
+
+    return $parties;
+  }
+
+  return FALSE;
+}
+
+function party_rota_get_assignments_from_parties($parties, Rota $rota) {
+  $assignments = array();
+
+  foreach ($parties as $pid => $party) {
+    $result = db_select('party_rota_assignment', 'a')
+      ->fields('a')
+      ->condition('rota_id', $rota->rota_id, '=')
+      ->condition('party_id', $pid, '=')
+      ->condition('position_id', 0, '=')
+      ->condition('slot_id', 0, '=')
+      ->execute()
+      ->fetchAll();
+
+    if (!empty($result)) {
+      $result = reset($result);
+
+      $assignments[$result->assignment_id] = entity_load_single('rota_assignment', $result->assignment_id);
+
+    }
+    else {
+      $values = array(
+        'name' => $party->label,
+        'party_id' => $party->pid,
+        'rota_id' => $rota->rota_id,
+      );
+      $assignment = party_rota_assignment_create($values);
+      $assignment->save();
+      $assignments[$assignment->assignment_id] = $assignment;
+    }
+
+  }
+
+  return $assignments;
+}
+
+
+function party_rota_get_assignment_from_context(Rota $rota, $position_id, $slot_id) {
+  $result = db_select('party_rota_assignment', 'a')
+    ->fields('a')
+    ->condition('rota_id', $rota->rota_id, '=')
+    ->condition('position_id', $position_id, '=')
+    ->condition('slot_id', $slot_id, '=')
+    ->execute()
+    ->fetchAll();
+
+  if (isset($result)) {
+    return reset($result);
+  }
+
+  return FALSE;
+}
+
+function party_rota_get_pids_from_assignments($assignments) {
+  $pids = array();
+
+  foreach ($assignments as $assignment) {
+    $pids[] = $assignment->party_id;
+  }
+
+  return $pids;
 }

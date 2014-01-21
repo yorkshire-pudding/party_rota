@@ -50,13 +50,21 @@ class PositionController extends EntityAPIController {
       'position_id' => '',
       'rota_id' => '',
       'is_new' => TRUE,
-      'title' => '',
-      'created' => '',
-      'changed' => '',
+      'name' => '',
+      'description' => '',
+      'created' => time(),
+      'changed' => time(),
     );
     
     $position = parent::create($values);
     return $position;
   }
-  
+
+  public function save($entity, DatabaseTransaction $transaction = NULL) {
+    $entity->changed = time();
+
+    $entity = parent::save($entity, $transaction);
+    return $entity;
+  }
+
 }

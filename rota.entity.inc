@@ -50,25 +50,71 @@ class RotaController extends EntityAPIController {
       'rota_id' => '',
       'is_new' => TRUE,
       'title' => '',
-      'created' => '',
-      'changed' => '',
+      'created' => time(),
+      'changed' => time(),
     );
     
     $rota = parent::create($values);
     return $rota;
   }
   
+  public function save($entity, DatabaseTransaction $transaction = NULL) {
+    $entity->changed = time();
+
+    $entity = parent::save($entity, $transaction);
+    return $entity;
+  }
+
+
   /**
    * Overriding the buldContent function to add entity specific fields
    */
   public function buildContent($entity, $view_mode = 'full', $langcode = NULL, $content = array()) {
     $content = parent::buildContent($entity, $view_mode, $langcode, $content);
 
-    $content['rota_sample_data'] =  array(
-      '#markup' => 'Sampe data',
-    );
+    $positions = party_rota_get_positions_from_rota($entity);
+    $slots = party_rota_get_slots_from_rota($entity);
+
+    if ($slots && $positions) {
+      $header = array(
+        'slot' => array('data' => t('Slot')),
+      );
+      $rows = array();
+
+      $empty = 'Not assigned';
+      foreach ($slots as $sid => $slot) {
+        $label = '';
+        if (!empty($slot->name)) {
+          $label = $slot->name . ' ( ' . date('d/m/Y H:i', $slot->date) . ' )';
+        }
+        else {
+          $label = date('d/m/Y H:i', $slot->date);
+        }
+        $rows[$sid] = array(
+          'slot' => $label,
+        );
+
+        foreach ($positions as $pid => $position) {
+          $header[$pid] = array('data' => $position->name);
+          if ($assignment = party_rota_get_assignment_from_context($entity, $pid, $sid)) {
+            $rows[$sid][$pid] = $assignment->name;
+          }
+          else {
+            $rows[$sid][$pid] = $empty;
+          }      
+        }
+      }
+
+      $content['table'] = array(
+        '#markup' => theme('table', array('header' => $header, 'rows' => $rows)),
+      );
+    }
 
     return $content;
   }
-  
+
+
+/*
+
+*/
 }

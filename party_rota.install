@@ -81,6 +81,18 @@ function party_rota_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'description' => array(
+        'description' => 'The description of the slot.',
+        'type' => 'varchar',
+        'length' => 255,
+        'default' => '',
+      ),
+      'date' => array(
+        'description' => 'The Unix timestamp when the slot will occur.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
       'created' => array(
         'description' => 'The Unix timestamp when the slot was created.',
         'type' => 'int',
@@ -126,6 +138,12 @@ function party_rota_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'description' => array(
+        'description' => 'The description of the position.',
+        'type' => 'varchar',
+        'length' => 255,
+        'default' => '',
+      ),
       'created' => array(
         'description' => 'The Unix timestamp when the position was created.',
         'type' => 'int',
@@ -142,5 +160,108 @@ function party_rota_schema() {
     'primary key' => array('position_id'),
   );
 
+  $schema['party_rota_assignment'] = array(
+    'description' => 'The base table for rota entities.',
+    'fields' => array(
+      'assignment_id' => array(
+        'description' => 'Primary Key: Identifier for a assignment.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'rota_id' => array(
+        'description' => 'The unique identifier of the rota this assignment is attached to.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'party_id' => array(
+        'description' => 'The unique identifier of the party this assignment is attached to.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'position_id' => array(
+        'description' => 'The unique identifier of the position this assignment is attached to.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'slot_id' => array(
+        'description' => 'The unique identifier of the slot this assignment is attached to.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'language' => array(
+        'description' => 'The language of the assignment.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'name' => array(
+        'description' => 'The name of the assignment - a human-readable identifier.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the assignment was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changed' => array(
+        'description' => 'The Unix timestamp when the assignment was most recently saved.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('assignment_id'),
+  );
+
   return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function party_rota_install() {
+  $t = get_t();
+
+  if (!field_info_field('party_rota_parties')) {
+    $field = array(
+      'field_name' => 'party_rota_parties',
+      'type' => 'entityreference',
+      'cardinality' => -1,
+      'settings' => array(
+        'target_type' => 'party',
+        'handler' => 'base',
+        'handler_settings' => array(
+          'target_hats' => array(
+            'party_indiv' => 'party_indiv',
+          ),
+        ),
+      ),
+    );
+
+    field_create_field($field);
+  }
+
+  if (!field_info_instance('rota', 'party_rota_parties', 'rota')) {
+    $instance = array(
+      'label' => $t('Rota Parties'),
+      'description' => $t('Parties that are able to be assigned to this Rota.'),
+      'field_name' => 'party_rota_parties',
+      'entity_type' => 'rota',
+      'bundle' => 'rota',
+      'widget' => array(
+        'type' => 'entityreference_autocomplete',
+      ),
+    );
+    field_create_instance($instance);
+  }
 }
