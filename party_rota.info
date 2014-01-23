@@ -4,20 +4,15 @@ core = 7.x
 
 dependencies[] = entity
 dependencies[] = ctools
-;dependencies[] = views
+dependencies[] = views
 
 files[] = rota.entity.inc
 files[] = rota_slot.entity.inc
 files[] = rota_position.entity.inc
 files[] = rota_assignment.entity.inc
-;files[] = rota_type.entity.inc
 files[] = party_rota.admin.inc
-;files[] = party_rota_type.admin.inc
 
-
-;files[] = views/model.views.inc
-;files[] = views/model_handler_link_field.inc
-;files[] = views/model_handler_delete_link_field.inc
-;files[] = views/model_handler_edit_link_field.inc
-;files[] = views/model_handler_model_operations_field.inc
+files[] = views/party_rota_handler_relationship_assignments_from_rota.inc
+files[] = views/party_rota_handler_relationship_positions_from_rota.inc
+files[] = views/party_rota_handler_relationship_slots_from_rota.inc
 
