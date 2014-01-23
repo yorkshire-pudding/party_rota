@@ -12,6 +12,7 @@ files[] = rota_position.entity.inc
 files[] = rota_assignment.entity.inc
 files[] = party_rota.admin.inc
 
+files[] = views/party_rota_handler_field_operations_links.inc
 files[] = views/party_rota_handler_relationship_assignments_from_rota.inc
 files[] = views/party_rota_handler_relationship_positions_from_rota.inc
 files[] = views/party_rota_handler_relationship_slots_from_rota.inc

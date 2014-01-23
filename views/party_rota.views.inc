@@ -14,6 +14,16 @@
 function party_rota_views_data() {
   $data = array();
 
+  // Rota fields.
+  $data['party_rota']['operations'] = array(
+    'title' => t('Operations'),
+    'help' => t('Provide CRUD links for Party Rotas.'),
+    'field' => array(
+      'real field' => 'rota_id',
+      'handler' => 'party_rota_handler_field_operations_links',
+    ),
+  );
+
   // Rota relationships.
   $data['party_rota']['rota_assignment'] = array(
     'title' => t('Rota Assignments'),
