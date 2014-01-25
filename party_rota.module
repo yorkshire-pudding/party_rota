@@ -2,26 +2,18 @@
 
 /**
  * @file
- * Module for the Model Entity - a starting point to create your own Entity
- * and associated administration interface
+ * Module for the Rota Entity
  */  
 
 
 /**
  * Implement hook_entity_info().
- *
- * We define two entities here - the actual entity that will hold our domain
- * specific information and an entity that holds information about the different
- * types of entities. See here: http://drupal.org/node/977380 for a discussion on this
- * choice.
  */
 function party_rota_entity_info() {
   $info = array();
 
   $info['rota'] = array(
     'label' => t('Rota'),
-    // The entity class and controller class extend the classes provided by the
-    // Entity API
     'entity class' => 'Rota',
     'controller class' => 'RotaController',
     'views controller class' => 'EntityDefaultViewsController',
@@ -30,13 +22,11 @@ function party_rota_entity_info() {
     'entity keys' => array(
         'id' => 'rota_id',
     ),
-    // Bundles are defined by the model types below
     'bundles' => array(
       'rota' => array(
         'label' => t('Rota'),
         'admin' => array(
           'path' => 'admin/structure/rotas',
-          //'real path' => 'admin/structure/rotas',
           'access arguments' => array('administer rota types'),
         ),
       ),
@@ -46,20 +36,16 @@ function party_rota_entity_info() {
     'creation callback' => 'party_rota_create',
     'access callback' => 'party_rota_access',
     'module' => 'party_rota',
-    // The information below is used by the ModelUIController (which extends the EntityDefaultUIController)
     'admin ui' => array(
       'path' => 'admin/content/rotas',
       'file' => 'party_rota.admin.inc',
       'controller class' => 'RotaUIController',
       'menu wildcard' => '%rota',
     ),
-    //'load hook' => 'party_rota_load',
   );
 
   $info['rota_slot'] = array(
     'label' => t('Slot'),
-    // The entity class and controller class extend the classes provided by the
-    // Entity API
     'entity class' => 'Slot',
     'controller class' => 'SlotController',
     'views controller class' => 'EntityDefaultViewsController',
@@ -68,7 +54,6 @@ function party_rota_entity_info() {
     'entity keys' => array(
         'id' => 'slot_id',
     ),
-    // Bundles are defined by the model types below
     'bundles' => array(
       'slot' => array(
         'label' => t('Slot'),
@@ -79,14 +64,10 @@ function party_rota_entity_info() {
     'creation callback' => 'party_rota_slot_create',
     'access callback' => 'party_rota_slot_access',
     'module' => 'party_rota',
-    // The information below is used by the ModelUIController (which extends the EntityDefaultUIController)
-    //'load hook' => 'party_rota_slot_load',
   );
 
   $info['rota_position'] = array(
     'label' => t('Position'),
-    // The entity class and controller class extend the classes provided by the
-    // Entity API
     'entity class' => 'Position',
     'controller class' => 'PositionController',
     'views controller class' => 'EntityDefaultViewsController',
@@ -95,7 +76,6 @@ function party_rota_entity_info() {
     'entity keys' => array(
         'id' => 'position_id',
     ),
-    // Bundles are defined by the model types below
     'bundles' => array(
       'position' => array(
         'label' => t('Position'),
@@ -106,14 +86,10 @@ function party_rota_entity_info() {
     'creation callback' => 'party_rota_position_create',
     'access callback' => 'party_rota_position_access',
     'module' => 'party_rota',
-    // The information below is used by the ModelUIController (which extends the EntityDefaultUIController)
-    //'load hook' => 'party_rota_position_load',
   );
 
   $info['rota_assignment'] = array(
     'label' => t('Assignment'),
-    // The entity class and controller class extend the classes provided by the
-    // Entity API
     'entity class' => 'Assignment',
     'controller class' => 'AssignmentController',
     'views controller class' => 'EntityDefaultViewsController',
@@ -122,7 +98,6 @@ function party_rota_entity_info() {
     'entity keys' => array(
         'id' => 'assignment_id',
     ),
-    // Bundles are defined by the model types below
     'bundles' => array(
       'assignment' => array(
         'label' => t('Assignment'),
@@ -133,8 +108,6 @@ function party_rota_entity_info() {
     'creation callback' => 'party_rota_assignment_create',
     'access callback' => 'party_rota_assignment_access',
     'module' => 'party_rota',
-    // The information below is used by the ModelUIController (which extends the EntityDefaultUIController)
-    //'load hook' => 'party_rota_assignment_load',
   );
 
   return $info;
@@ -144,7 +117,16 @@ function party_rota_entity_info() {
  * Implements hook_menu().
  */
 function party_rota_menu() {
-  $items['admin/party_rota/%ctools_js/add/%rota_position/%rota_slot'] = array(
+  $items['admin/party_rota/%ctools_js/assign/%rota_position/%rota_slot'] = array(
+    'title' => 'Add Assignment',
+    'page callback' => 'party_rota_inline_ajax_assign',
+    'page arguments' => array(2,4,5),
+    'access callback' => TRUE,
+    'file' => 'party_rota.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/party_rota/%ctools_js/add/%rota/%'] = array(
     'title' => 'Add Assignment',
     'page callback' => 'party_rota_inline_ajax_add',
     'page arguments' => array(2,4,5),
@@ -169,13 +151,7 @@ function party_rota_menu() {
  * Implements hook_permission().
  */
 function party_rota_permission() {
-  // We set up permisssions to manage entity types, manage all entities and the
-  // permissions for each individual entity
   $permissions = array(
-    /*'administer rota types' => array(
-      'title' => t('Administer rota types'),
-      'description' => t('Create and delete fields for rota types, and set their permissions.'),
-    ),*/
     'administer rotas' => array(
       'title' => t('Administer rotas'),
       'description' => t('Edit and delete all rotas'),
@@ -199,18 +175,7 @@ function party_rota_permission() {
 
 
 /**
- * Determines whether the given user has access to a model.
- *
- * @param $op
- *   The operation being performed. One of 'view', 'update', 'create', 'delete'
- *   or just 'edit' (being the same as 'create' or 'update').
- * @param $model
- *   Optionally a model or a model type to check access for. If nothing is
- *   given, access for all models is determined.
- * @param $account
- *   The user to check for. Leave it to NULL to check for the global user.
- * @return boolean
- *   Whether access is allowed or not.
+ * Determines whether the given user has access to a rota.
  */
 function party_rota_access($op, $rota = NULL, $account = NULL) {
   if (user_access('administer rotas', $account)) {
@@ -220,6 +185,9 @@ function party_rota_access($op, $rota = NULL, $account = NULL) {
   return FALSE;
 }
 
+/**
+ * Determines whether the given user has access to a rota slot.
+ */
 function party_rota_slot_access($op, $rota = NULL, $account = NULL) {
   if (user_access('administer slots', $account)) {
     return TRUE;
@@ -228,6 +196,9 @@ function party_rota_slot_access($op, $rota = NULL, $account = NULL) {
   return FALSE;
 }
 
+/**
+ * Determines whether the given user has access to a rota position.
+ */
 function party_rota_position_access($op, $rota = NULL, $account = NULL) {
   if (user_access('administer positions', $account)) {
     return TRUE;
@@ -236,6 +207,9 @@ function party_rota_position_access($op, $rota = NULL, $account = NULL) {
   return FALSE;
 }
 
+/**
+ * Determines whether the given user has access to a rota assignment.
+ */
 function party_rota_assignment_access($op, $rota = NULL, $account = NULL) {
   if (user_access('administer assignments', $account)) {
     return TRUE;
@@ -245,71 +219,151 @@ function party_rota_assignment_access($op, $rota = NULL, $account = NULL) {
 }
 
 /**
- * Fetch a model object. Make sure that the wildcard you choose 
- * in the model entity definition fits the function name here.
+ * Fetch a rota object.
  *
- * @param $model_id
- *   Integer specifying the model id.
+ * @param $rota_id
+ *   Integer specifying the rota id.
  * @param $reset
  *   A boolean indicating that the internal cache should be reset.
  * @return
- *   A fully-loaded $model object or FALSE if it cannot be loaded.
+ *   A fully-loaded $rota object or FALSE if it cannot be loaded.
  *
- * @see model_load_multiple()
+ * @see rota_load_multiple()
  */
 function rota_load($rota_id, $reset = FALSE) {
   $rotas = rota_load_multiple(array($rota_id), array(), $reset);
   return reset($rotas);
 }
 
+/**
+ * Fetch a slot object.
+ *
+ * @param $slot_id
+ *   Integer specifying the slot id.
+ * @param $reset
+ *   A boolean indicating that the internal cache should be reset.
+ * @return
+ *   A fully-loaded $slot object or FALSE if it cannot be loaded.
+ *
+ * @see rota_slot_load_multiple()
+ */
 function rota_slot_load($slot_id, $reset = FALSE) {
   $slots = rota_slot_load_multiple(array($slot_id), array(), $reset);
   return reset($slots);
 }
 
+/**
+ * Fetch a position object.
+ *
+ * @param $position_id
+ *   Integer specifying the position id.
+ * @param $reset
+ *   A boolean indicating that the internal cache should be reset.
+ * @return
+ *   A fully-loaded $position object or FALSE if it cannot be loaded.
+ *
+ * @see rota_position_load_multiple()
+ */
 function rota_position_load($position_id, $reset = FALSE) {
   $positions = rota_position_load_multiple(array($position_id), array(), $reset);
   return reset($positions);
 }
 
+/**
+ * Fetch a assignment object.
+ *
+ * @param $assignment_id
+ *   Integer specifying the assignment id.
+ * @param $reset
+ *   A boolean indicating that the internal cache should be reset.
+ * @return
+ *   A fully-loaded $assignment object or FALSE if it cannot be loaded.
+ *
+ * @see rota_assignment_load_multiple()
+ */
 function rota_assignment_load($assignment_id, $reset = FALSE) {
   $assignments = rota_assignment_load_multiple(array($assignment_id), array(), $reset);
   return reset($assignments);
 }
 
 /**
- * Load multiple models based on certain conditions.
+ * Load multiple rotas based on certain conditions.
  *
- * @param $model_ids
- *   An array of model IDs.
+ * @param $rota_ids
+ *   An array of rota IDs.
  * @param $conditions
- *   An array of conditions to match against the {model} table.
+ *   An array of conditions to match against the {party_rota} table.
  * @param $reset
  *   A boolean indicating that the internal cache should be reset.
  * @return
- *   An array of model objects, indexed by model_id.
+ *   An array of rota objects, indexed by rota_id.
  *
  * @see entity_load()
- * @see model_load()
+ * @see rota_load()
  */
 function rota_load_multiple($rota_ids = array(), $conditions = array(), $reset = FALSE) {
   return entity_load('rota', $rota_ids, $conditions, $reset);
 }
 
+/**
+ * Load multiple slots based on certain conditions.
+ *
+ * @param $slot_ids
+ *   An array of slot IDs.
+ * @param $conditions
+ *   An array of conditions to match against the {party_rota_slot} table.
+ * @param $reset
+ *   A boolean indicating that the internal cache should be reset.
+ * @return
+ *   An array of slot objects, indexed by slot_id.
+ *
+ * @see entity_load()
+ * @see rota_slot_load()
+ */
 function rota_slot_load_multiple($slot_ids = array(), $conditions = array(), $reset = FALSE) {
   return entity_load('rota_slot', $slot_ids, $conditions, $reset);
 }
 
+/**
+ * Load multiple positions based on certain conditions.
+ *
+ * @param $position_ids
+ *   An array of position IDs.
+ * @param $conditions
+ *   An array of conditions to match against the {party_rota_position} table.
+ * @param $reset
+ *   A boolean indicating that the internal cache should be reset.
+ * @return
+ *   An array of position objects, indexed by position_id.
+ *
+ * @see entity_load()
+ * @see rota_position_load()
+ */
 function rota_position_load_multiple($position_ids = array(), $conditions = array(), $reset = FALSE) {
   return entity_load('rota_position', $position_ids, $conditions, $reset);
 }
 
+/**
+ * Load multiple assignments based on certain conditions.
+ *
+ * @param $assignment_ids
+ *   An array of assignment IDs.
+ * @param $conditions
+ *   An array of conditions to match against the {party_rota_assignment} table.
+ * @param $reset
+ *   A boolean indicating that the internal cache should be reset.
+ * @return
+ *   An array of assignment objects, indexed by assignment_id.
+ *
+ * @see entity_load()
+ * @see rota_assignment_load()
+ */
 function rota_assignment_load_multiple($assignment_ids = array(), $conditions = array(), $reset = FALSE) {
   return entity_load('rota_assignment', $assignment_ids, $conditions, $reset);
 }
 
 /**
- * Deletes a model.
+ * Deletes a rota.
  */
 function party_rota_delete(Rota $rota) {
   $rota->delete();
@@ -317,10 +371,10 @@ function party_rota_delete(Rota $rota) {
 
 
 /**
- * Delete multiple models.
+ * Delete multiple rotas.
  *
- * @param $model_ids
- *   An array of model IDs.
+ * @param $rota_ids
+ *   An array of rota IDs.
  */
 function party_rota_delete_multiple(array $rota_ids) {
   entity_get_controller('rota')->delete($rota_ids);
@@ -329,6 +383,9 @@ function party_rota_delete_multiple(array $rota_ids) {
 
 /**
  * Create a rota object.
+ *
+ * @param array $values
+ *   A list of values used to create the rota object.
  */
 function party_rota_create($values = array()) {
   return entity_get_controller('rota')->create($values);
@@ -366,17 +423,17 @@ function party_rota_assignment_create($values = array()) {
 
 
 /**
- * Saves a model to the database.
+ * Saves a rota to the database.
  *
- * @param $model
- *   The model object.
+ * @param $rota
+ *   The rota object.
  */
 function party_rota_save(Rota $rota) {
   return $rota->save();
 }
 
 /**
- * URI callback for models
+ * URI callback for rotas
  */
 function party_rota_uri(Rota $rota){
   return array(
@@ -386,7 +443,7 @@ function party_rota_uri(Rota $rota){
 
 
 /**
- * Menu title callback for showing individual entities
+ * Menu title callback for showing individual rotas
  */
 function party_rota_page_title(Rota $rota){
   return $rota->name;
@@ -394,7 +451,7 @@ function party_rota_page_title(Rota $rota){
 
 
 /**
- * Sets up content to show an individual model
+ * Sets up content to show an individual rota
  * @todo - get rid of drupal_set_title();
  */
 function party_rota_page_view($rota, $view_mode = 'full') {    
@@ -406,20 +463,21 @@ function party_rota_page_view($rota, $view_mode = 'full') {
 }
 
 /**
- * Implement hook_theme().
+ * Implements hook_theme().
  */
 function party_rota_theme() {
   return array(
-    'party_rota_dock' => array(
-      'render element' => 'element',
-    ),
-    'party_rota_add_list' => array(
-      'variables' => array('content' => array()),
-      'file' => 'party_rota.admin.inc',
-    ),
     'party_rota' => array(
       'render element' => 'elements',
       'template' => 'rota',
+    ),
+    'party_rota_slot' => array(
+      'variables' => array('entity' => NULL),
+      'template' => 'party-rota-slot',
+    ),
+    'party_rota_position' => array(
+      'variables' => array('entity' => NULL),
+      'template' => 'party-rota-position',
     ),
   );
 }
@@ -428,7 +486,7 @@ function party_rota_theme() {
  * Implements hook_menu_local_tasks_alter().
  */
 function party_rota_menu_local_tasks_alter(&$data, $router_item, $root_path) {
-  // Add action link 'admin/structure/models/add' on 'admin/structure/models'.
+  // Add action link 'admin/structure/rotas/add' on 'admin/structure/rotas'.
   if ($root_path == 'admin/content/rotas') {
     $item = menu_get_item('admin/content/rotas/add');
     if ($item['access']) {
@@ -441,144 +499,14 @@ function party_rota_menu_local_tasks_alter(&$data, $router_item, $root_path) {
 }
 
 /**
+ * Fetches a list of slots attached to a Rota.
  *
- */
-function party_rota_element_info() {
-  $types = array();
-
-  $types['party_rota_dock'] = array(
-    '#input' => TRUE,
-    '#js_select' => TRUE,
-    '#multiple' => TRUE,
-    '#options' => array(),
-    '#empty' => '',
-    '#element_validate' => array('party_rota_dock_element_validate'),
-    '#process' => array('party_rota_dock_element_process'),
-    //'#autocomplete_path' => FALSE,
-    '#theme' => 'party_rota_dock',
-    '#element' => 'blah',
-    //'#theme_wrappers' => array('form_element'),
-    //'#maxlength' => 16,
-  );
-
-  return $types;
-}
-
-/**
+ * @param Rota $rota
+ *   Rota object to query.
  *
+ * @return
+ *   An array of fully loaded Slot objects keyed by slot_id.
  */
-function party_rota_dock_element_validate($element) {}
-
-/**
- *
- */
-function party_rota_dock_element_process($element) {
-
-    if ($element['#multiple']) {
-    $value = is_array($element['#value']) ? $element['#value'] : array();
-  }
-  else {
-    // Advanced selection behavior makes no sense for radios.
-    $element['#js_select'] = FALSE;
-  }
-
-  $element['#tree'] = TRUE;
-
-  if (count($element['#options']) > 0) {
-    if (!isset($element['#default_value']) || $element['#default_value'] === 0) {
-      $element['#default_value'] = array();
-    }
-
-    // Create a checkbox or radio for each item in #options in such a way that
-    // the value of the tableselect element behaves as if it had been of type
-    // checkboxes or radios.
-    foreach ($element['#options'] as $key => $choice) {
-      // Do not overwrite manually created children.
-      if (!isset($element[$key])) {
-        if ($element['#multiple']) {
-          $title = '';
-          if (!empty($element['#options'][$key]['title']['data']['#title'])) {
-            $title = t('Update @title', array(
-              '@title' => $element['#options'][$key]['title']['data']['#title'],
-            ));
-          }
-          $element[$key] = array(
-            '#type' => 'checkbox',
-            '#title' => $title,
-            '#title_display' => 'invisible',
-            '#return_value' => $key,
-            '#default_value' => isset($value[$key]) ? $key : NULL,
-            '#attributes' => $element['#attributes'],
-          );
-        }
-        else {
-          // Generate the parents as the autogenerator does, so we will have a
-          // unique id for each radio button.
-          $parents_for_id = array_merge($element['#parents'], array($key));
-          $element[$key] = array(
-            '#type' => 'radio',
-            '#title' => '',
-            '#return_value' => $key,
-            '#default_value' => ($element['#default_value'] == $key) ? $key : NULL,
-            '#attributes' => $element['#attributes'],
-            '#parents' => $element['#parents'],
-            '#id' => drupal_html_id('edit-' . implode('-', $parents_for_id)),
-            '#ajax' => isset($element['#ajax']) ? $element['#ajax'] : NULL,
-          );
-        }
-        if (isset($element['#options'][$key]['#weight'])) {
-          $element[$key]['#weight'] = $element['#options'][$key]['#weight'];
-        }
-      }
-    }
-  }
-  else {
-    $element['#value'] = array();
-  }
-  return $element;
-}
-
-function theme_party_rota_dock($variables) {
-
- $element = $variables['element'];
-  $rows = array();
-  $header = $element['#header'];
-  if (!empty($element['#options'])) {
-    // Generate a table row for each selectable item in #options.
-    foreach (element_children($element) as $key) {
-      $row = array();
-
-      $row['data'] = array();
-      if (isset($element['#options'][$key]['#attributes'])) {
-        $row += $element['#options'][$key]['#attributes'];
-      }
-      // Render the checkbox / radio element.
-      $row['data'][] = drupal_render($element[$key]);
-
-      // As theme_table only maps header and row columns by order, create the
-      // correct order by iterating over the header fields.
-      foreach ($element['#header'] as $fieldname => $title) {
-        $row['data'][] = $element['#options'][$key][$fieldname];
-      }
-      $rows[] = $row;
-    }
-    // Add an empty header or a "Select all" checkbox to provide room for the
-    // checkboxes/radios in the first table column.
-    if ($element['#js_select']) {
-      // Add a "Select all" checkbox.
-      drupal_add_js('misc/tableselect.js');
-      array_unshift($header, array('class' => array('select-all')));
-    }
-    else {
-      // Add an empty header when radio buttons are displayed or a "Select all"
-      // checkbox is not desired.
-      array_unshift($header, '');
-    }
-  }
-  return theme('table', array('header' => $header, 'rows' => $rows, 'empty' => $element['#empty'], 'attributes' => $element['#attributes']));
-
-}
-
 function party_rota_get_slots_from_rota(Rota $rota) {
   $result = db_select('party_rota_slot', 's')
     ->fields('s')
@@ -600,6 +528,15 @@ function party_rota_get_slots_from_rota(Rota $rota) {
   return FALSE;
 }
 
+/**
+ * Fetches a list of positions attached to a Rota.
+ *
+ * @param Rota $rota
+ *   Rota object to query.
+ *
+ * @return
+ *   An array of fully loaded Position objects keyed by position_id.
+ */
 function party_rota_get_positions_from_rota(Rota $rota) {
   $result = db_select('party_rota_position', 'p')
     ->fields('p')
@@ -620,6 +557,15 @@ function party_rota_get_positions_from_rota(Rota $rota) {
   return FALSE;
 }
 
+/**
+ * Fetches a list of assignments attached to a Rota.
+ *
+ * @param Rota $rota
+ *   Rota object to query.
+ *
+ * @return
+ *   An array of fully loaded Assignment objects keyed by assignment_id.
+ */
 function party_rota_get_assignments_from_rota(Rota $rota) {
   $result = db_select('party_rota_assignment', 'a')
     ->fields('a')
@@ -640,6 +586,15 @@ function party_rota_get_assignments_from_rota(Rota $rota) {
   return FALSE;
 }
 
+/**
+ * Fetches a list of parties assigned to a Rota.
+ *
+ * @param Rota $rota
+ *   Rota object to query.
+ *
+ * @return
+ *   An array of fully loaded Party objects keyed by pid.
+ */
 function party_rota_get_parties_from_rota(Rota $rota) {
   $result = db_select('field_data_party_rota_parties', 'p')
     ->fields('p')
@@ -661,6 +616,18 @@ function party_rota_get_parties_from_rota(Rota $rota) {
   return FALSE;
 }
 
+/**
+ * Fetches a list of party assignments attached to a Rota,
+ *   and creates new assignments for parties that are not already assigned.
+ *
+ * @param array $parties
+ *   An array of parties of which the keys are the pids.
+ * @param Rota $rota
+ *   Rota object to query.
+ *
+ * @return
+ *   An array of fully loaded Assignment objects keyed by assignment_id.
+ */
 function party_rota_get_assignments_from_parties($parties, Rota $rota) {
   $assignments = array();
 
@@ -696,7 +663,19 @@ function party_rota_get_assignments_from_parties($parties, Rota $rota) {
   return $assignments;
 }
 
-
+/**
+ * Fetches a specific Assignment from its context in a Rota.
+ *
+ * @param Rota $rota
+ *   Rota object to query.
+ * @param integer $position_id
+ *   The position id of the assignment to be loaded.
+ * @param integer $slot_id
+ *   The slot id of the assignment to be loaded.
+ *
+ * @return
+ *   A query result object with all Assignment values keyed by assignment_id.
+ */
 function party_rota_get_assignment_from_context(Rota $rota, $position_id, $slot_id) {
   $result = db_select('party_rota_assignment', 'a')
     ->fields('a')
@@ -711,16 +690,6 @@ function party_rota_get_assignment_from_context(Rota $rota, $position_id, $slot_
   }
 
   return FALSE;
-}
-
-function party_rota_get_pids_from_assignments($assignments) {
-  $pids = array();
-
-  foreach ($assignments as $assignment) {
-    $pids[] = $assignment->party_id;
-  }
-
-  return $pids;
 }
 
 /**
