@@ -74,6 +74,41 @@ function party_rota_views_data() {
     ),
   );
 
+  $data['party_rota_assignment']['position'] = array(
+    'title' => t('Position'),
+    'relationship' => array(
+      'label' => t('Positions from Assignment'),
+      'help' => t('Relates an assignment to its position.'),
+      'handler' => 'party_rota_handler_relationship_position_from_assignment',
+      'base' => 'party_rota_position',
+      'base_field' => 'position_id',
+      'entity_type' => 'rota_position',
+    ),
+  );
+
+  $data['party_rota_assignment']['slots'] = array(
+    'title' => t('Slot'),
+    'relationship' => array(
+      'label' => t('Slot from Assignment'),
+      'help' => t('Relates an assignment to its slot.'),
+      'handler' => 'party_rota_handler_relationship_slot_from_assignment',
+      'base' => 'party_rota_slot',
+      'base_field' => 'slot_id',
+      'entity_type' => 'rota_slot',
+    ),
+  );
+
+  $data['party_rota_assignment']['party'] = array(
+    'title' => t('Party'),
+    'relationship' => array(
+      'label' => t('Party from Assignment'),
+      'help' => t('Relates an assignment to its party.'),
+      'handler' => 'party_rota_handler_relationship_party_from_assignment',
+      'base' => 'party',
+      'base_field' => 'pid',
+      'entity_type' => 'party',
+    ),
+  );
   // Rota Position relationships.
 
   // Rota Slot relationships.

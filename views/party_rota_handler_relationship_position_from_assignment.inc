@@ -3,7 +3,7 @@
  * @file Relationship for party data sets, relating parties to the entities in a set.
  */
 
-class party_rota_handler_relationship_rota_from_assignment extends views_handler_relationship {
+class party_rota_handler_relationship_position_from_assignment extends views_handler_relationship {
   /**
    * Defines default values for options.
    */
@@ -31,7 +31,7 @@ class party_rota_handler_relationship_rota_from_assignment extends views_handler
       'table' => $this->definition['base'],
       'field' => $this->definition['base_field'],
       'left_table' => 'party_rota_assignment',
-      'left_field' => 'rota_id',
+      'left_field' => 'position_id',
     );
     $join_party->construct();
     $join_party->adjusted = TRUE;
@@ -39,3 +39,4 @@ class party_rota_handler_relationship_rota_from_assignment extends views_handler
     $this->alias = $this->query->add_relationship('party_rota' . $this->relationship, $join_party, $this->definition['base'], $this->relationship);
   }
 }
+
