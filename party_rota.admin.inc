@@ -93,7 +93,6 @@ class RotaUIController extends EntityDefaultUIController {
   
 }
 
-
 /**
  * Form callback wrapper: create or edit a rota.
  *
@@ -113,7 +112,6 @@ function party_rota_form_wrapper($rota = NULL) {
   return drupal_get_form('party_rota_edit_form', $rota);
 }
 
-
 /**
  * Form callback wrapper: delete a rota.
  *
@@ -125,7 +123,6 @@ function party_rota_form_wrapper($rota = NULL) {
 function party_rota_delete_form_wrapper($rota) {
   return drupal_get_form('party_rota_delete_form', $rota);
 }
-
 
 /**
  * Form callback: create or edit a rota.
@@ -187,15 +184,40 @@ function party_rota_edit_form($form, &$form_state, $rota) {
   else {
     $form_state['slots'] = $slots;
 
-    foreach ($slots as $slot) {
-      $form['slots_positions']['slots']['slot_id_' . $slot->slot_id] = array(
-        '#type' => 'markup',
-        '#entity' => $slot,
-        '#theme' => 'party_rota_slot',
+    $header = array(
+      'date' => array('data' => t('Date')),
+      'name' => array('data' => t('Slot')),
+      'description' => array('data' => t('Description')),
+      'ops' => array('data' => t('Operations')),
+    );
+
+    $rows = array();
+
+    foreach ($slots as $sid => $slot) {
+      $edit_link = ctools_modal_text_button(
+        t('Edit'),
+        'admin/party_rota/nojs/rota_slot/' . $sid . '/edit',
+        t('Edit Slot'), 'ctools-modal-modal-popup-medium'
+      );
+
+      $delete_link = ctools_modal_text_button(
+        t('Delete'),
+        'admin/party_rota/nojs/rota_slot/' . $sid . '/delete',
+        t('Delete Slot'), 'ctools-modal-modal-popup-medium'
+      );
+
+      $rows[$sid] = array(
+        'date' => date('j M Y - H:m', $slot->date),
+        'name' => $slot->name,
+        'description' => $slot->description,
+        'ops' => $edit_link . ', ' . $delete_link,
       );
     }
-  }
 
+    $form['slots_positions']['slots']['table'] = array(
+      '#markup' => theme('table', array('header' => $header, 'rows' => $rows)),
+    );
+  }
   if (!isset($rota->is_new)) {
     $add_link = ctools_modal_text_button(
       t('Add Slot'),
@@ -234,13 +256,37 @@ function party_rota_edit_form($form, &$form_state, $rota) {
   else {
     $form_state['positions'] = $positions;
 
-    foreach ($positions as $position) {
-      $form['slots_positions']['positions']['position_id_' . $position->position_id] = array(
-        '#type' => 'markup',
-        '#entity' => $position,
-        '#theme' => 'party_rota_position',
+    $header = array(
+      'name' => array('data' => t('Position')),
+      'description' => array('data' => t('Description')),
+      'ops' => array('data' => t('Operations')),
+    );
+
+    $rows = array();
+
+    foreach ($positions as $pid => $position) {
+      $edit_link = ctools_modal_text_button(
+        t('Edit'),
+        'admin/party_rota/nojs/rota_position/' . $pid . '/edit',
+        t('Edit Position'), 'ctools-modal-modal-popup-medium'
+      );
+
+      $delete_link = ctools_modal_text_button(
+        t('Delete'),
+        'admin/party_rota/nojs/rota_position/' . $pid . '/delete',
+        t('Delete Position'), 'ctools-modal-modal-popup-medium'
+      );
+
+      $rows[$pid] = array(
+        'name' => $position->name,
+        'description' => $position->description,
+        'ops' => $edit_link . ', ' . $delete_link,
       );
     }
+
+    $form['slots_positions']['positions']['table'] = array(
+      '#markup' => theme('table', array('header' => $header, 'rows' => $rows)),
+    );
   }
 
   if (!isset($rota->is_new)) {
@@ -355,7 +401,6 @@ function party_rota_edit_form($form, &$form_state, $rota) {
   return $form;
 }
 
-
 /**
  * Form API validate callback for the rota form
  */
@@ -365,7 +410,6 @@ function party_rota_edit_form_validate(&$form, &$form_state) {
   // Notify field widgets to validate their data.
   field_attach_form_validate('rota', $rota, $form, $form_state);
 }
-
 
 /**
  * Form API submit callback for the rota form.
@@ -396,12 +440,14 @@ function party_rota_form_submit_delete(&$form, &$form_state) {
   $form_state['redirect'] = 'admin/content/rotas/rota/' . $form_state['rota']->rota_id . '/delete';
 }
 
-
 /**
  * Form callback: confirmation form for deleting a rota.
  *
+ * @param $form
+ * @param $form_state
  * @param $rota
- *   The rota to delete
+ *
+ * @return mixed
  *
  * @see confirm_form()
  */
@@ -410,7 +456,7 @@ function party_rota_delete_form($form, &$form_state, $rota) {
 
   $form['#submit'][] = 'party_rota_delete_form_submit';
 
-  $form = confirm_form($form,
+  return confirm_form($form,
     t('Are you sure you want to delete rota %name?', array('%name' => $rota->name)),
     'admin/content/rotas/rota',
     '<p>' . t('This action cannot be undone.') . '</p>',
@@ -418,8 +464,6 @@ function party_rota_delete_form($form, &$form_state, $rota) {
     t('Cancel'),
     'confirm'
   );
-  
-  return $form;
 }
 
 /**
@@ -450,41 +494,52 @@ function party_rota_set_breadcrumb() {
   drupal_set_breadcrumb($breadcrumb);
 }
 
-function party_rota_slot_inline_edit_form($form, &$form_state, $rota) {
+/**
+ * Create/Edit form callback for the Slot entity.
+ *
+ * @param $form
+ * @param $form_state
+ * @param $slot
+ *
+ * @see party_rota_inline_ajax_edit()
+ */
+function party_rota_slot_inline_edit_form($form, &$form_state, $slot) {
+  $rota = rota_load($slot->rota_id);
+  $form_state['slot'] = $slot;
+
+  if (isset($slot->is_new)) {
+    drupal_set_title(t('Add Slot to the @name Rota', array('@name' => $rota->name)));
+  }
+  else {
+    drupal_set_title(t('Edit the @name Slot', array('@name' => $slot->name)));
+  }
   if (!isset($form_state['rota'])) {
     $form_state['rota'] = $rota;
   }
 
-  // Get the slots for this rota.
-  $slots = party_rota_get_slots_from_rota($rota);
-
-  $form['add_slot'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Add Slots to Rota'),
-    '#weight' => 2,
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
-  );
-
-  $form['add_slot']['slot_name'] = array(
-    '#type' => 'textfield',
-    '#title' => 'Name',
-  );
-
-  $form['add_slot']['slot_description'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Description'),
-  );
-
-  $form['add_slot']['slot_date'] = array(
+  $form['date'] = array(
     '#type' => 'date_popup',
-    '#title' => t('Date'),
+    '#title' => t('Slot Date'),
+    '#default_value' => isset($slot->date) ? date('Y-m-d H:i', $slot->date) : '',
     '#required' => TRUE,
   );
 
-  $form['add_slot']['submit'] = array(
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Slot Label',
+    '#default_value' => isset($slot->name) ? $slot->name : '',
+  );
+
+  $form['description'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Slot Description'),
+    '#description' => t('Optional instructions to the Assignee about this Slot'),
+    '#default_value' => isset($slot->description) ? $slot->description : '',
+  );
+
+  $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Add slot'),
+    '#value' => (isset($slot->is_new)) ? t('Add slot') : t('Save'),
     '#submit' => array('party_rota_slot_inline_edit_form_submit'),
     '#validate' => array('party_rota_slot_inline_edit_form_validate'),
   );
@@ -492,51 +547,82 @@ function party_rota_slot_inline_edit_form($form, &$form_state, $rota) {
   return $form;
 }
 
+/**
+ * Validation callback for the slot entity edit form.
+ *
+ * @see party_rota_slot_inline_edit_form()
+ * @see party_rota_slot_inline_edit_form_submit()
+ */
 function party_rota_slot_inline_edit_form_validate(&$form, &$form_state) {
-  if (!empty($form_state['values']['slot_description']) && strlen($form_state['values']['slot_description']) > 255) {
+  if (!empty($form_state['values']['description']) && strlen($form_state['values']['description']) > 255) {
     form_set_error('slot_description', t('Your description is too long, please use less than 255 characters.'));
   }
 }
 
+/**
+ * Submission callback for the slot entity edit form.
+ *
+ * @see party_rota_slot_inline_edit_form()
+ * @see party_rota_slot_inline_edit_form_validate()
+ */
 function party_rota_slot_inline_edit_form_submit(&$form, &$form_state) {
-  $values = array(
-    'rota_id' => $form_state['rota']->rota_id,
-    'name' => $form_state['values']['slot_name'],
-    'description' => $form_state['values']['slot_description'],
-    'date' => strtotime($form_state['values']['slot_date']),
-  );
+  $slot = $form_state['slot'];
 
-  $slot = party_rota_slot_create($values);
+  foreach ($form_state['values'] as $key => $value) {
+    $slot->{$key} = $value;
+  }
+
+  $slot->date = strtotime($form_state['values']['date']);
+
+  if (isset($slot->is_new)) {
+    drupal_set_message(t('New slot @name has been created.', array('@name' => $slot->name)), 'status');
+  }
+  else {
+    drupal_set_message(t('Slot @name has been updated.', array('@name' => $slot->name)), 'status');
+  }
+
   $slot->save();
-  drupal_set_message(t('New slot @name has been created.', array('@name' => $slot->name)), 'status');
+
+  $form_state['redirect'] = 'admin/content/rotas/rota/' . $slot->rota_id . '/edit';
 }
 
-function party_rota_position_inline_edit_form($form, &$form_state, $rota) {
+/**
+ * Create/Edit form callback for the Position entity.
+ *
+ * @param $form
+ * @param $form_state
+ * @param $position
+ *
+ * @see party_rota_inline_ajax_edit()
+ */
+function party_rota_position_inline_edit_form($form, &$form_state, $position) {
+  $rota = rota_load($position->rota_id);
+  $form_state['position'] = $position;
+
+  if (isset($position->is_new)) {
+    drupal_set_title(t('Add Position to the @name Rota', array('@name' => $rota->name)));
+  }
+  else {
+    drupal_set_title(t('Edit the @name Position', array('@name' => $position->name)));
+  }
   if (!isset($form_state['rota'])) {
     $form_state['rota'] = $rota;
   }
 
-  $form['add_position'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Add Positions to Rota'),
-    '#weight' => 2,
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
-  );
-
-  $form['add_position']['position_name'] = array(
+  $form['name'] = array(
     '#type' => 'textfield',
-    '#title' => t('Name'),
-    '#required' => TRUE,
+    '#title' => 'Position Label',
+    '#default_value' => isset($position->name) ? $position->name : '',
   );
 
-  $form['add_position']['position_description'] = array(
+  $form['description'] = array(
     '#type' => 'textfield',
-    '#title' => t('Description'),
+    '#title' => t('Position Description'),
+    '#description' => t('Optional instructions to the Assignee about this Position'),
+    '#default_value' => isset($position->description) ? $position->description : '',
   );
 
-
-  $form['add_position']['submit'] = array(
+  $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Add position'),
     '#submit' => array('party_rota_position_inline_edit_form_submit'),
@@ -546,29 +632,92 @@ function party_rota_position_inline_edit_form($form, &$form_state, $rota) {
   return $form;
 }
 
+/**
+ * Validation callback for the position entity edit form.
+ *
+ * @see party_rota_position_inline_edit_form()
+ * @see party_rota_position_inline_edit_form_submit()
+ */
 function party_rota_position_inline_edit_form_validate(&$form, &$form_state) {
   // Make sure the position has a name.
-  if (empty($form_state['values']['position_name'])) {
+  if (empty($form_state['values']['name'])) {
     form_set_error('position_name', t('Please choose a name for the new position.'));
   }
 
-  if (!empty($form_state['values']['position_description']) && strlen($form_state['values']['position_description']) > 255) {
+  if (!empty($form_state['values']['description']) && strlen($form_state['values']['description']) > 255) {
     form_set_error('position_description', t('Your description is too long, please use less than 255 characters.'));
   }
 }
 
+/**
+ * Submission callback for the position entity edit form.
+ *
+ * @see party_rota_position_inline_edit_form()
+ * @see party_rota_position_inline_edit_form_validate()
+ */
 function party_rota_position_inline_edit_form_submit(&$form, &$form_state) {
-  $values = array(
-    'rota_id' => $form_state['rota']->rota_id,
-    'name' => $form_state['values']['position_name'],
-    'description' => $form_state['values']['position_description'],
-  );
+  $position = $form_state['position'];
 
-  $position = party_rota_position_create($values);
+  foreach ($form_state['values'] as $key => $value) {
+    $position->{$key} = $value;
+  }
+
+  if (isset($position->is_new)) {
+    drupal_set_message(t('New position @name has been created.', array('@name' => $position->name)), 'status');
+  }
+  else {
+    drupal_set_message(t('Position @name has been updated.', array('@name' => $position->name)), 'status');
+  }
+
   $position->save();
-  drupal_set_message(t('New position @name has been created.', array('@name' => $slot->name)), 'status');
+
+  $form_state['redirect'] = 'admin/content/rotas/rota/' . $position->rota_id . '/edit';
 }
 
+/**
+ * Create/Edit form callback for the rota entities.
+ *
+ * @param $form
+ * @param $form_state
+ * @param $entity
+ *
+ * @see party_rota_inline_ajax_delete()
+ */
+function party_rota_entity_inline_delete_form($form, &$form_state, $entity) {
+  $form_state['entity'] = $entity;
+
+  $question = t('Are you sure you want to delete this @entity', array('@entity' => get_class($entity)));
+  $path = 'admin/content/rotas/rota/' . $entity->rota_id . '/edit';
+  $description = t('You are about to delete the @name @entity. This action cannot be undone.', array('@name' => $entity->name, '@entity' => get_class($entity)));
+  $yes = t('Delete');
+
+  return confirm_form($form, $question, $path, $description, $yes);
+}
+
+/**
+ * Submission callback for the position entity edit form.
+ *
+ * @see party_rota_entity_inline_delete_form()
+ */
+function party_rota_entity_inline_delete_form_submit(&$form, &$form_state) {
+  $entity = $form_state['entity'];
+
+  entity_delete($entity->entityType(), $entity->identifier());
+
+  $form_state['redirect'] = 'admin/content/rotas/rota/' . $entity->rota_id . '/edit';
+  drupal_set_message(t('@entity @name was deleted successfully.', array('@name' => $entity->name, '@entity' => get_class($entity))), 'status');
+}
+
+/**
+ * AJAX form builder
+ * Adds a rota entity to a Rota.
+ *
+ * @param null $js
+ * @param $position
+ * @param $slot
+ *
+ * @return array|mixed
+ */
 function party_rota_inline_ajax_assign($js = NULL, $position, $slot) {
   // Fall back if $js is not set.
   if (!$js) {
@@ -605,6 +754,18 @@ function party_rota_inline_ajax_assign($js = NULL, $position, $slot) {
   print ajax_render($output);
 }
 
+/**
+ * Form callback to assign a party to a rota slot.
+ *
+ * @param $form
+ * @param $form_state
+ * @param $position
+ * @param $slot
+ *
+ * @return array
+ *
+ * @see party_rota_inline_ajax_assign_form_submit()
+ */
 function party_rota_inline_ajax_assign_form($form, &$form_state, $position, $slot) {
   if ($position->rota_id != $slot->rota_id) {
     return array(array(
@@ -642,18 +803,30 @@ function party_rota_inline_ajax_assign_form($form, &$form_state, $position, $slo
   return $form;
 }
 
-function party_rota_inline_ajax_assign_form_validate(&$form, &$form_state) {
-}
-
+/**
+ * Submission callback for the party assign form.
+ *
+ * @see party_rota_inline_ajax_assign_form()
+ */
 function party_rota_inline_ajax_assign_form_submit(&$form, &$form_state) {
   $assignment = entity_load_single('rota_assignment', $form_state['values']['party_assignment']);
   $assignment->slot_id = $form_state['slot']->slot_id;
   $assignment->position_id = $form_state['position']->position_id;
 
   $assignment->save();
+  $form_state['redirect'] = 'admin/content/rotas/rota/' . $assignment->rota_id . '/edit';
 }
 
-function party_rota_inline_ajax_delete($js = NULL, $assignment) {
+/**
+ * AJAX form builder
+ * Adds a rota entity to a Rota.
+ *
+ * @param null $js
+ * @param $assignment
+ *
+ * @return array|mixed
+ */
+function party_rota_inline_ajax_delete_assignment($js = NULL, $assignment) {
   // Fall back if $js is not set.
   if (!$js) {
     return drupal_get_form('party_rota_inline_ajax_delete_form');
@@ -672,7 +845,7 @@ function party_rota_inline_ajax_delete($js = NULL, $assignment) {
     ),
   );
 
-  $output = ctools_modal_form_wrapper('party_rota_inline_ajax_delete_form', $form_state);
+  $output = ctools_modal_form_wrapper('party_rota_inline_ajax_delete_assignment_form', $form_state);
   if (!empty($form_state['executed'])) {
     // We'll just overwrite the form output if it was successful.
     $output = array();
@@ -689,7 +862,18 @@ function party_rota_inline_ajax_delete($js = NULL, $assignment) {
   print ajax_render($output);
 }
 
-function party_rota_inline_ajax_delete_form($form, &$form_state, $assignment) {
+/**
+ * Form callback to unassign a party from a rota slot.
+ *
+ * @param $form
+ * @param $form_state
+ * @param $assignment
+ *
+ * @return array
+ *
+ * @see party_rota_inline_ajax_delete_assignment_form_submit()
+ */
+function party_rota_inline_ajax_delete_assignment_form($form, &$form_state, $assignment) {
   if (!$assignment) {
     return array(array(
       '#markup' => 'There was a problem. You are trying to delete an assigment that does not exist.',
@@ -698,46 +882,166 @@ function party_rota_inline_ajax_delete_form($form, &$form_state, $assignment) {
   $form_state['assignment'] = $assignment;
 
   $question = t('Are you sure you want to delete this assignment?');
+  $path = 'admin/content/rotas/rota/' . $assignment->rota_id . '/edit';
 
   return confirm_form($form, $question, $path, NULL, t('Delete'));
 }
 
-function party_rota_inline_ajax_delete_form_validate(&$form, &$form_state) {
-}
-
-function party_rota_inline_ajax_delete_form_submit(&$form, &$form_state) {
+/**
+ * Submission callback for the party unassign form.
+ *
+ * @see party_rota_inline_ajax_delete_assignment_form()
+ */
+function party_rota_inline_ajax_delete_assignment_form_submit(&$form, &$form_state) {
   $assignment = $form_state['assignment'];
 
+  $form_state['redirect'] = 'admin/content/rotas/rota/' . $assignment->rota_id . '/edit';
   $assignment->delete();
 }
 
-function party_rota_inline_ajax_add($js = NULL, $rota, $entity) {
+/**
+ * AJAX form builder
+ * Adds a rota entity to a Rota.
+ *
+ * @param null $js
+ * @param $rota
+ * @param $entity_type
+ *
+ * @return array|mixed
+ */
+function party_rota_inline_ajax_add($js = NULL, $rota, $entity_type) {
+  $values = array(
+    'rota_id' => $rota->rota_id,
+  );
+
+  $create = 'party_' . $entity_type . '_create';
+  $entity = $create($values);
+
   // Fall back if $js is not set.
   if (!$js) {
-    if ($entity == 'rota_slot') {
-      return drupal_get_form('party_rota_slot_inline_edit_form');
+    return drupal_get_form($entity->getInlineEditForm(), $entity);
+  }
+
+  ctools_include('modal');
+  ctools_include('ajax');
+
+  $form_state = array(
+    'ajax' => TRUE,
+    'build_info' => array(
+      'args' => array(
+        0 => $entity,
+      ),
+    ),
+  );
+
+  $output = ctools_modal_form_wrapper($entity->getInlineEditForm(), $form_state);
+
+  if (!empty($form_state['executed'])) {
+    // We'll just overwrite the form output if it was successful.
+    $output = array();
+    ctools_add_js('ajax-responder');
+    $output[] = ctools_modal_command_dismiss(t('Add success'));
+    if (isset($_GET['destination'])) {
+      $output[] = ctools_ajax_command_redirect($_GET['destination']);
     }
-    if ($entity == 'rota_position') {
-      return drupal_get_form('party_rota_position_inline_edit_form');
+    else {
+      $output[] = ctools_ajax_command_reload();
+    }
+  }
+
+  print ajax_render($output);
+}
+
+/**
+ * AJAX form builder
+ * Edit a rota entity on a Rota.
+ *
+ * @param null $js
+ * @param $entity_type
+ * @param $entity_id
+ *
+ * @return array|mixed
+ */
+function party_rota_inline_ajax_edit($js = NULL, $entity_type, $entity_id) {
+  // Fall back if $js is not set.
+  $entity = entity_load_single($entity_type, $entity_id);
+
+  if (!$js) {
+    return drupal_get_form($entity->getInlineEditForm(), $entity);
+  }
+
+  ctools_include('modal');
+  ctools_include('ajax');
+
+  $form_state = array(
+    'ajax' => TRUE,
+    'build_info' => array(
+      'args' => array(
+        0 => $entity,
+      ),
+    ),
+  );
+
+  $output = ctools_modal_form_wrapper($entity->getInlineEditForm(), $form_state);
+
+  if (!empty($form_state['executed'])) {
+    // We'll just overwrite the form output if it was successful.
+    $output = array();
+    ctools_add_js('ajax-responder');
+    $output[] = ctools_modal_command_dismiss(t('Add success'));
+    if (isset($_GET['destination'])) {
+      $output[] = ctools_ajax_command_redirect($_GET['destination']);
+    }
+    else {
+      $output[] = ctools_ajax_command_reload();
+    }
+  }
+
+  print ajax_render($output);
+}
+
+/**
+ * AJAX form builder
+ * Deletes a rota entity from a Rota.
+ *
+ * @param null $js
+ * @param $entity_type
+ * @param $entity_id
+ *
+ * @return array|mixed|string
+ */
+function party_rota_inline_ajax_delete($js = NULL, $entity_type, $entity_id) {
+  // Fall back if $js is not set.
+  $entity = entity_load_single($entity_type, $entity_id);
+  dpm($entity);
+
+
+  if (!$js) {
+    if ($entity_type == 'rota_slot') {
+      return drupal_get_form('party_rota_entity_inline_delete_form', $entity);
+    }
+    if ($entity_type == 'rota_position') {
+      return drupal_get_form('party_rota_entity_inline_delete_form', $entity);
     }
   }
 
   ctools_include('modal');
   ctools_include('ajax');
+
   $form_state = array(
     'ajax' => TRUE,
     'build_info' => array(
       'args' => array(
-        0 => $rota,
+        0 => $entity,
       ),
     ),
   );
 
-  if ($entity == 'rota_slot') {
-    $output = ctools_modal_form_wrapper('party_rota_slot_inline_edit_form', $form_state);
+  if ($entity_type == 'rota_slot') {
+    $output = ctools_modal_form_wrapper('party_rota_entity_inline_delete_form', $form_state);
   }
-  elseif ($entity == 'rota_position') {
-    $output = ctools_modal_form_wrapper('party_rota_position_inline_edit_form', $form_state);
+  elseif ($entity_type == 'rota_position') {
+    $output = ctools_modal_form_wrapper('party_rota_entity_inline_delete_form', $form_state);
   }
   else {
     // @TODO Needs better error handling.
@@ -759,3 +1063,7 @@ function party_rota_inline_ajax_add($js = NULL, $rota, $entity) {
   print ajax_render($output);
 }
 
+function party_rota_form_party_rota_slot_inline_edit_form_alter(&$form, &$form_state) {
+
+  //dpm($form);
+}

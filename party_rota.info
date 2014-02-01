@@ -5,6 +5,7 @@ core = 7.x
 dependencies[] = entity
 dependencies[] = ctools
 dependencies[] = views
+dependencies[] = date_popup
 
 files[] = rota.entity.inc
 files[] = rota_slot.entity.inc

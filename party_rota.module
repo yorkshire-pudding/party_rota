@@ -127,7 +127,7 @@ function party_rota_menu() {
   );
 
   $items['admin/party_rota/%ctools_js/add/%rota/%'] = array(
-    'title' => 'Add Assignment',
+    'title' => 'Add Entity to Rota',
     'page callback' => 'party_rota_inline_ajax_add',
     'page arguments' => array(2,4,5),
     'access callback' => TRUE,
@@ -135,9 +135,27 @@ function party_rota_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['admin/party_rota/%ctools_js/%/%/edit'] = array(
+    'title' => 'Edit Rota Entity',
+    'page callback' => 'party_rota_inline_ajax_edit',
+    'page arguments' => array(2,3,4),
+    'access callback' => TRUE,
+    'file' => 'party_rota.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/party_rota/%ctools_js/%/%/delete'] = array(
+    'title' => 'Delete Rota Entity',
+    'page callback' => 'party_rota_inline_ajax_delete',
+    'page arguments' => array(2,3,4),
+    'access callback' => TRUE,
+    'file' => 'party_rota.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
   $items['admin/party_rota/%ctools_js/delete/%rota_assignment'] = array(
     'title' => 'Delete Assignment',
-    'page callback' => 'party_rota_inline_ajax_delete',
+    'page callback' => 'party_rota_inline_ajax_delete_assignment',
     'page arguments' => array(2,4),
     'access callback' => TRUE,
     'file' => 'party_rota.admin.inc',
@@ -702,3 +720,6 @@ function party_rota_views_api() {
   );
 }
 
+function party_rota_form_alter(&$form, &$form_state, $form_id) {
+  //dpm($form);
+}

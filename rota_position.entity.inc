@@ -5,26 +5,44 @@
  */
 
 /**
- * The class used for model entities
+ * The class used for Position entities
  */
 class Position extends Entity {
-  
+
+  protected $inlineEditForm = 'party_rota_position_inline_edit_form';
+
+  /**
+   * Constructor for the position entity.
+   */
   public function __construct($values = array()) {
     parent::__construct($values, 'rota_position');
   }
 
+  /**
+   * Defines the entity label if the 'entity_class_label' callback is used.
+   */
   protected function defaultLabel() {
     return $this->name;
   }
 
+  /**
+   * Defines the entity uri if the 'entity_class_uri' callback is used.
+   */
   protected function defaultUri() {
     return array('path' => 'rota_position/' . $this->position_id);
-  } 
+  }
+
+  /**
+   * Returns to form callback for the inline edit form of the entity.
+   */
+  public function getInlineEditForm() {
+    return $this->inlineEditForm;
+  }
 
 }
 
 /**
- * The Controller for Model entities
+ * The Controller for Position entities.
  */
 class PositionController extends EntityAPIController {
 
@@ -32,20 +50,17 @@ class PositionController extends EntityAPIController {
     parent::__construct($entityType);
   }
 
-
   /**
-   * Create a model - we first set up the values that are specific
-   * to our model schema but then also go through the EntityAPIController
-   * function.
+   * Creates a Position entity.
    * 
-   * @param $type
-   *   The machine-readable type of the model.
+   * @param $values
+   *   The machine-readable type of the position.
    *
-   * @return
-   *   A model object with all default fields initialized.
+   * @return object
+   *   A position object with all default fields initialized.
    */
   public function create(array $values = array()) {
-    // Add values that are specific to our Model
+    // Add values that are specific to our position
     $values += array( 
       'position_id' => '',
       'rota_id' => '',
@@ -60,6 +75,14 @@ class PositionController extends EntityAPIController {
     return $position;
   }
 
+  /**
+   * Saves the Position entity.
+   *
+   * @param $entity
+   * @param DatabaseTransaction $transaction
+   *
+   * @return object
+   */
   public function save($entity, DatabaseTransaction $transaction = NULL) {
     $entity->changed = time();
 

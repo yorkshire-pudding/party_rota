@@ -1,14 +1,10 @@
 <?php
 /**
  * @file
- * Default theme implementation of an Instagram image link.
+ * Default theme implementation of a Position entity.
  *
  * Available variables:
- * - post: The entire data array returned from the Instagram API request.
- * - href: The url to the Instagram post page.
- * - src: The source url to the instagram image.
- * - width: The display width of the image.
- * - height: The display height of the image.
+ * - entity: The fully loaded position entity object.
  */
 ?>
 
@@ -16,3 +12,4 @@
   <h4><?php print $entity->name; ?></h4>
   <span><?php print $entity->description; ?></span>
 <div>
+

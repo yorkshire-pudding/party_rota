@@ -5,26 +5,44 @@
  */
 
 /**
- * The class used for model entities
+ * The class used for Slot entities
  */
 class Slot extends Entity {
-  
+
+  protected $inlineEditForm = 'party_rota_slot_inline_edit_form';
+
+  /**
+   * Constructor for the position entity.
+   */
   public function __construct($values = array()) {
     parent::__construct($values, 'rota_slot');
   }
 
+  /**
+   * Defines the entity label if the 'entity_class_label' callback is used.
+   */
   protected function defaultLabel() {
     return $this->name;
   }
 
+  /**
+   * Defines the entity uri if the 'entity_class_uri' callback is used.
+   */
   protected function defaultUri() {
     return array('path' => 'rota_slot/' . $this->slot_id);
-  } 
+  }
+
+  /**
+   * Returns to form callback for the inline edit form of the entity.
+   */
+  public function getInlineEditForm() {
+    return $this->inlineEditForm;
+  }
 
 }
 
 /**
- * The Controller for Model entities
+ * The Controller for Slot entities.
  */
 class SlotController extends EntityAPIController {
 
@@ -34,18 +52,16 @@ class SlotController extends EntityAPIController {
 
 
   /**
-   * Create a model - we first set up the values that are specific
-   * to our model schema but then also go through the EntityAPIController
-   * function.
-   * 
-   * @param $type
-   *   The machine-readable type of the model.
+   * Creates a Slot entity.
    *
-   * @return
-   *   A model object with all default fields initialized.
+   * @param $values
+   *   The machine-readable type of the slot.
+   *
+   * @return object
+   *   A slot object with all default fields initialized.
    */
   public function create(array $values = array()) {
-    // Add values that are specific to our Model
+    // Add values that are specific to our slot
     $values += array( 
       'slot_id' => '',
       'rota_id' => '',
@@ -61,6 +77,14 @@ class SlotController extends EntityAPIController {
     return $slot;
   }
 
+  /**
+   * Saves the Slot entity.
+   *
+   * @param $entity
+   * @param DatabaseTransaction $transaction
+   *
+   * @return object
+   */
   public function save($entity, DatabaseTransaction $transaction = NULL) {
     $entity->changed = time();
 
